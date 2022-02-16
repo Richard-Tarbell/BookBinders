@@ -1,0 +1,43 @@
+---
+title: "Bookbinders Case Study"
+author: "Austin Vanderlyn, Christine Kelly, Richard Tarbell"
+date: "2/16/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(logistf)
+library(tidyverse)
+library(car)
+library(broom)
+library(DescTools)
+library(ROCR)
+```
+
+```{r, include=FALSE}
+BBBC_Train <- read_excel("Data/BBBC-Train.xlsx")
+```
+
+
+### I. Executive Summary
+
+### II. The Problem 
+
+### III. Review of Related Literature
+
+### IV. Methodologies
+
+### V. Data / Cleaning
+
+### VI. Findings 
+
+### VII. Conclusion and Recommendations
+
+### Appendix
+
+
+
+
+
