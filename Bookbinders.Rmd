@@ -41,3 +41,8 @@ BBBC_Train <- read_excel("Data/BBBC-Train.xlsx")
 
 
 
+### Logistic Regression Model
+
+
+
+
