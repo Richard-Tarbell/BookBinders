@@ -21,15 +21,15 @@ BBBC_Train <- read_excel("Data/BBBC-Train.xlsx")
 ```
 
 
-### I. Executive Summary
+### I. Executive Summary - Richard  
 
-### II. The Problem 
+### II. The Problem - Austin
 
-### III. Review of Related Literature
+### III. Review of Related Literature - Christine
 
 ### IV. Methodologies
 
-### V. Data / Cleaning
+### V. Data / Cleaning - Richard
 
 ### VI. Findings 
 
