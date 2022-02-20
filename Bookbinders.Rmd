@@ -14,10 +14,12 @@ library(car)
 library(broom)
 library(DescTools)
 library(ROCR)
+library(ResourceSelection)
 ```
 
 ```{r, include=FALSE}
 BBBC_Train <- read_excel("Data/BBBC-Train.xlsx")
+BBBC_Test = read_excel("Data/BBBC-Test.xlsx")
 ```
 
 
@@ -43,6 +45,79 @@ BBBC_Train <- read_excel("Data/BBBC-Train.xlsx")
 
 ### Logistic Regression Model
 
+Exploration
+```{r}
+str(BBBC_Train)
+head(BBBC_Train)
+```
+
+
+Remove observation variable, not relevant
+```{r}
+BBBC_Train_Logit = subset(BBBC_Train, select = -Observation)
+BBBC_Test_Logit = subset(BBBC_Test, select = -Observation)
+```
 
 
 
+Change choice and gender to factors
+```{r}
+BBBC_Train_Logit$Choice = as.factor(BBBC_Train_Logit$Choice)
+BBBC_Train_Logit$Gender = as.factor(BBBC_Train_Logit$Gender)
+BBBC_Test_Logit$Choice = as.factor(BBBC_Test_Logit$Choice)
+BBBC_Test_Logit$Gender = as.factor(BBBC_Test_Logit$Gender)
+```
+
+
+Create intial logistic regression model
+```{r}
+glm.train = glm(Choice ~ ., data = BBBC_Train_Logit, family = "binomial")
+summary(glm.train)
+```
+
+
+Remove variables with high multicollinearity
+```{r}
+vif(glm.train)
+glm.train = glm(Choice ~ .-Last_purchase, data = BBBC_Train_Logit, family = "binomial")
+vif(glm.train)
+glm.train = glm(Choice ~ .-Last_purchase-First_purchase, data = BBBC_Train_Logit, family = "binomial")
+vif(glm.train)
+```
+
+
+Build stepwise model
+```{r}
+glm.null = glm(Choice ~ 1, data = BBBC_Train_Logit, family = "binomial")
+glm.full = glm(Choice ~ .-Last_purchase-First_purchase, data = BBBC_Train_Logit, family = "binomial")
+glm.step1 = step(glm.null, scope = list(upper = glm.full), direction = "both", test = "Chisq", trace = FALSE)
+summary(glm.step1)
+```
+
+
+Goodness of fit
+```{r}
+hoslem.test(glm.step1$y, fitted(glm.step1), g = 10)
+```
+
+
+Plot
+```{r}
+plot(glm.step1, which = 4)
+```
+
+
+
+
+
+```{r}
+BBBC_Train_Logit$PredProb = predict.glm(glm.step1, newdata = BBBC_Train_Logit, type = "response")
+BBBC_Train_Logit$PredChoice = ifelse(BBBC_Train_Logit$PredProb >= 0.5, 1, 0)
+caret::confusionMatrix(as.factor(BBBC_Train_Logit$Choice), as.factor(BBBC_Train_Logit$PredChoice))
+```
+
+```
+
+
+```{r}
+caret::confusionMatrix(as.factor(BankTrain$y), as.factor(BankTrain$PredChoice.AIC))
