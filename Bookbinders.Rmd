@@ -14,30 +14,40 @@ library(car)
 library(broom)
 library(DescTools)
 library(ROCR)
+<<<<<<< HEAD
 library(ResourceSelection)
 ```
 
 ```{r, include=FALSE}
 BBBC_Train <- read_excel("Data/BBBC-Train.xlsx")
 BBBC_Test = read_excel("Data/BBBC-Test.xlsx")
+=======
+library(e1071)
+```
+
+```{r, include=FALSE}
+BBBC_Train <- read_excel("Data/BBBC-Train.xlsx",col_names = TRUE)
+>>>>>>> 478c65954d38802cfa506b8174727f63c10a8778
 ```
 
 
-### I. Executive Summary
+### I. Executive Summary - Richard  
 
-### II. The Problem 
+### II. The Problem - Austin
 
-### III. Review of Related Literature
+### III. Review of Related Literature - Christine
 
 ### IV. Methodologies
 
-### V. Data / Cleaning
+### V. Data / Cleaning - Richard
 
 ### VI. Findings 
 
 ### VII. Conclusion and Recommendations
 
 ### Appendix
+
+
 
 
 
@@ -86,6 +96,7 @@ vif(glm.train)
 ```
 
 
+<<<<<<< HEAD
 Build stepwise model
 ```{r}
 glm.null = glm(Choice ~ 1, data = BBBC_Train_Logit, family = "binomial")
@@ -117,6 +128,69 @@ caret::confusionMatrix(as.factor(BBBC_Train_Logit$Choice), as.factor(BBBC_Train_
 ```
 
 ```
+=======
+```{r}
+# Remove the observed column
+BBBC_Train <- BBBC_Train[2:12]
+
+head(BBBC_Train)
+```
+
+
+```{r}
+anyNA(BBBC_Train)
+```
+
+
+```{r}
+str(BBBC_Train)
+```
+
+```{r}
+# Convert to factors
+BBBC_Train$Choice = as.factor(BBBC_Train$Choice)
+BBBC_Train$Gender = as.factor(BBBC_Train$Gender)
+```
+
+
+```{r}
+# Splitting data into training and testing sets 70/30 Split
+set.seed(1)
+tr_ind = sample(nrow(BBBC_Train), 0.7*nrow(BBBC_Train), replace=FALSE)
+bbbctrain = BBBC_Train[tr_ind,]
+bbbctest = BBBC_Train[-tr_ind,]
+```
+
+```{r}
+svm_form = Choice ~ .
+
+tuned = tune.svm(svm_form, data = bbbctrain, 
+                 gamma = seq(.01, .1, by = .01), 
+                 cost = seq(.1, 1, by = .1))
+```
+
+
+```{r}
+mysvm = svm(formula = svm_form, 
+            data = bbbctrain, 
+            gamma =tuned$best.parameters$gamma, 
+            cost = tuned$best.parameters$cost)
+
+summary(mysvm)
+```
+
+```{r}
+svmpredict = predict(mysvm, 
+                     bbbctest, 
+                     type = "response")
+
+table(pred = svmpredict, true = bbbctest$Choice)
+```
+
+
+
+
+>>>>>>> 478c65954d38802cfa506b8174727f63c10a8778
 
 
 ```{r}
