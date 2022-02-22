@@ -22,7 +22,12 @@ BBBC_Train <- read_excel("Data/BBBC-Train.xlsx",col_names = TRUE)
 ```
 
 
-### I. Executive Summary - Richard  
+### I. Executive Summary - Richard
+LM
+
+Logit
+
+SVM
 
 ### II. The Problem - Austin
 
