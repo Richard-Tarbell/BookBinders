@@ -19,6 +19,7 @@ library(e1071)
 
 ```{r, include=FALSE}
 BBBC_Train <- read_excel("Data/BBBC-Train.xlsx",col_names = TRUE)
+BBBC_Test <- read_excel("Data/BBBC-Test.xlsx",col_names = TRUE)
 ```
 
 
@@ -44,17 +45,12 @@ SVM
 ### Appendix
 
 
-
-
-
-
-
-### Logistic Regression Model
-
+### Data importing and cleaning
 
 ```{r}
-# Remove the observed column
+# Remove the observed column. Only run once
 BBBC_Train <- BBBC_Train[2:12]
+BBBC_Test <- BBBC_Test[2:12]
 
 head(BBBC_Train)
 ```
@@ -62,8 +58,10 @@ head(BBBC_Train)
 
 ```{r}
 anyNA(BBBC_Train)
+anyNA(BBBC_Test)
 ```
 
+#### View training data
 
 ```{r}
 str(BBBC_Train)
@@ -75,19 +73,45 @@ BBBC_Train$Choice = as.factor(BBBC_Train$Choice)
 BBBC_Train$Gender = as.factor(BBBC_Train$Gender)
 ```
 
+#### View training data
+
+```{r}
+str(BBBC_Test)
+```
+
+```{r}
+# Convert to factors
+BBBC_Test$Choice = as.factor(BBBC_Test$Choice)
+BBBC_Test$Gender = as.factor(BBBC_Test$Gender)
+```
+
+
+
+### Linear Regression Model
+
+
+### Logistic Regression Model
+
+
+
+
+
+### SVM Model
+
+#### Use training split on BBBC_Train
 
 ```{r}
 # Splitting data into training and testing sets 70/30 Split
 set.seed(1)
 tr_ind = sample(nrow(BBBC_Train), 0.7*nrow(BBBC_Train), replace=FALSE)
-bbbctrain = BBBC_Train[tr_ind,]
-bbbctest = BBBC_Train[-tr_ind,]
+book.train.split = BBBC_Train[tr_ind,]
+book.test.split = BBBC_Train[-tr_ind,]
 ```
 
 ```{r}
 svm_form = Choice ~ .
 
-tuned = tune.svm(svm_form, data = bbbctrain, 
+tuned = tune.svm(svm_form, data = book.train.split, 
                  gamma = seq(.01, .1, by = .01), 
                  cost = seq(.1, 1, by = .1))
 ```
@@ -95,7 +119,7 @@ tuned = tune.svm(svm_form, data = bbbctrain,
 
 ```{r}
 mysvm = svm(formula = svm_form, 
-            data = bbbctrain, 
+            data = book.train.split, 
             gamma =tuned$best.parameters$gamma, 
             cost = tuned$best.parameters$cost)
 
@@ -103,12 +127,22 @@ summary(mysvm)
 ```
 
 ```{r}
+# Predict on the test split
 svmpredict = predict(mysvm, 
-                     bbbctest, 
+                     book.test.split, 
                      type = "response")
 
-table(pred = svmpredict, true = bbbctest$Choice)
+caret::confusionMatrix(svmpredict, book.test.split$Choice)
 ```
+
+```{r}
+svmpredict = predict(mysvm, 
+                     BBBC_Test, 
+                     type = "response")
+
+caret::confusionMatrix(svmpredict, BBBC_Test$Choice)
+```
+
 
 
 
