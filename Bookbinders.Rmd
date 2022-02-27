@@ -234,6 +234,15 @@ exp(0.002)
 exp(0.196)
 ```
 
+### Midwest Mailing Campaign
+
+Data for the proposed mailing campaign;
+50,000 customers
+cost of mailing = $0.65 / addressee
+cost of book = $15
+Selling price of book = $31.95
+overhead = 0.45*bookcost
+
 
 
 
