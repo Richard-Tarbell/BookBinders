@@ -15,14 +15,6 @@ library(broom)
 library(DescTools)
 library(ROCR)
 library(ResourceSelection)
-<<<<<<< HEAD
-```
-
-```{r, include=FALSE}
-BBBC_Train <- read_excel("Data/BBBC-Train.xlsx")
-BBBC_Test = read_excel("Data/BBBC-Test.xlsx")
-=======
->>>>>>> 67d8d4d30e2a91c7b4155e6c231dabc59edf4cd5
 library(e1071)
 ```
 
@@ -58,6 +50,16 @@ The first model attempted was a linear regression.  This model is not useful for
 
 ### V. Data / Cleaning - Richard
 
+The datasets required minimal cleaning. Both the Train (`BBBC_Train`) and Test (`BBBC_Test`) datasets originally had 12 variables and the Training set consisted of 1600 observations while the Testing set had 2300. Performing basic analysis of the data we saw there were no missing values and there happened to be a column in each titled `Observation`. We removed this column because it would add no significant value to our models.
+
+Checking for correlations within the pairwise plot the strongest correlation came out to be between `Last_Purchase` and `First_Purchase` which resemble the months since the customers last purchase and the months since their first purchase. With this being the only positive correlation > 0.7 we may run into the issue of multicollinearity. 
+
+The variables `Choice` and `Gender` were both treated as numeric variables within the data however we converted these to factor variables given their binary values. Further exploring these variables we discovered that approximately 70% of customers who did not a purchase were Males and \~54% of the customers who did make a purchase were also Males. Comparing the customers who did not make a purchase to those who did we find a class imbalance with only 25% of the `Choice` class to being customers who did make a purchase. This may cause issues in model accuracy given that SVMs do not perform well on imbalanced datasets.
+
+
+
+
+
 ### VI. Findings 
 
 ### VII. Conclusion and Recommendations
@@ -72,34 +74,93 @@ The first model attempted was a linear regression.  This model is not useful for
 
 Exploration
 
+Any missing values?
 ```{r}
 anyNA(BBBC_Train)
 anyNA(BBBC_Test)
-
 ```
 
 
+Check the size of the training and test datasets
+```{r}
+dim(BBBC_Train)
+
+dim(BBBC_Test)
+```
+
+Class imbalance
+```{r}
+table(BBBC_Train$Choice)
+```
+
+View details of the data
 ```{r}
 str(BBBC_Train)
-head(BBBC_Train)
 ```
 
-Remove observation variable, not relevant
+
+
+Remove `Observation` variable and convert `Choice` to factor
+
 ```{r}
 BBBC_Train = subset(BBBC_Train, select = -Observation)
 BBBC_Test = subset(BBBC_Test, select = -Observation)
+
+BBBC_Train$Choice = as.factor(BBBC_Train$Choice)
+BBBC_Test$Choice = as.factor(BBBC_Test$Choice)
 ```
 
-Change choice and gender to factors for logistic regression model
+
+
+```{r, include=FALSE}
+# code to get histograms in pair plot
+panel.hist <- function(x, ...) {
+    usr <- par("usr")
+    on.exit(par(usr))
+    par(usr = c(usr[1:2], 0, 1.5))
+    his <- hist(x, plot = FALSE)
+    breaks <- his$breaks
+    nB <- length(breaks)
+    y <- his$counts
+    y <- y/max(y)
+    rect(breaks[-nB], 0, breaks[-1], y, col = rgb(0, 1, 1, alpha = 0.5), ...)
+    # lines(density(x), col = 2, lwd = 2) # Uncomment to add density lines
+}
+
+panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
+{
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(0, 1, 0, 1))
+    r <- abs(cor(x, y))
+    txt <- format(c(r, 0.123456789), digits = digits)[1]
+    txt <- paste0(prefix, txt)
+    if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+    text(0.5, 0.5, txt, cex = cex.cor)
+}
+```
+
+```{r, fig.height=8, fig.width=12}
+pairs.test = subset(BBBC_Train, select = -Choice)
+pairs.test = subset(pairs.test, select = -Gender)
+
+pairs(pairs.test,
+      upper.panel = panel.cor,
+      diag.panel = panel.hist)
+```
+
+
+
 ```{r}
-BBBC_Train_Logit = BBBC_Train
-BBBC_Test_Logit = BBBC_Test
-
-BBBC_Train_Logit$Choice = as.factor(BBBC_Train_Logit$Choice)
-BBBC_Train_Logit$Gender = as.factor(BBBC_Train_Logit$Gender)
-BBBC_Test_Logit$Choice = as.factor(BBBC_Test_Logit$Choice)
-BBBC_Test_Logit$Gender = as.factor(BBBC_Test_Logit$Gender)
+ggplot(data = BBBC_Train,
+       aes(x = factor(ifelse(Choice == 1, "Purchase", "No Purchase")), 
+           fill = factor(ifelse(Gender == 0, "Female", "Male")))) + 
+    geom_bar(alpha =1, color = "black", stat = "count") + 
+    scale_fill_manual(values = c("lavender", "orange")) +
+    geom_text(aes(label = scales::percent(..count.. / tapply(..count.., ..x.., sum)[as.character(..x..)])), stat = "count", position = position_stack(vjust=0.5)) +
+    labs(fill = "Gender", y="", x="")
 ```
+
+
 
 
 
@@ -108,8 +169,8 @@ BBBC_Test_Logit$Gender = as.factor(BBBC_Test_Logit$Gender)
 
 
 ```{r}
-#lm.book <- lm(Choice ~ ., data = BBBC_Train_Logit)
-#summary(lm.book)
+lm.book <- lm(as.numeric(Choice) ~ ., data = BBBC_Train)
+summary(lm.book)
 ```
 
 
@@ -122,6 +183,18 @@ BBBC_Test_Logit$Gender = as.factor(BBBC_Test_Logit$Gender)
 
 
 ### Logistic Regression Model
+
+
+Change gender to factor for logistic regression model
+```{r}
+BBBC_Train_Logit = BBBC_Train
+BBBC_Test_Logit = BBBC_Test
+
+BBBC_Train_Logit$Gender = as.factor(BBBC_Train_Logit$Gender)
+
+BBBC_Test_Logit$Gender = as.factor(BBBC_Test_Logit$Gender)
+```
+
 
 
 Create initial logistic regression model
@@ -169,11 +242,15 @@ plot(glm.step1, which = 4)
 ```
 
 
+
+
+
 ```{r}
 BBBC_Train_Logit$PredProb = predict.glm(glm.step1, BBBC_Train_Logit, type = "response")
 BBBC_Train_Logit$PredChoice = ifelse(BBBC_Train_Logit$PredProb >= 0.5, 1, 0)
 caret::confusionMatrix(as.factor(BBBC_Train_Logit$Choice), as.factor(BBBC_Train_Logit$PredChoice))
 ```
+
 The accuracy of this model is not the best, but the positive predictive value, which is what we care about, is pretty good.
 
 
@@ -289,9 +366,6 @@ overhead = 0.45*bookcost
 
 
 
-
-
-
 ### SVM Model
 
 ```{r}
@@ -300,13 +374,10 @@ BBBC_Test_SVM = BBBC_Test
 ```
 
 ```{r}
-# Convert to factors
-BBBC_Train_SVM$Choice = as.factor(BBBC_Train_SVM$Choice)
-BBBC_Train_SVM$Gender = as.factor(BBBC_Train_SVM$Gender)
-
-BBBC_Test_SVM$Choice = as.factor(BBBC_Test_SVM$Choice)
-BBBC_Test_SVM$Gender = as.factor(BBBC_Test_SVM$Gender)
+str(BBBC_Train_SVM)
 ```
+
+
 
 #### Use training split on BBBC_Train
 
@@ -317,6 +388,7 @@ tr_ind = sample(nrow(BBBC_Train_SVM), 0.7*nrow(BBBC_Train_SVM), replace=FALSE)
 book.train.split = BBBC_Train_SVM[tr_ind,]
 book.test.split = BBBC_Train_SVM[-tr_ind,]
 ```
+
 
 ```{r}
 svm_form = Choice ~ .
