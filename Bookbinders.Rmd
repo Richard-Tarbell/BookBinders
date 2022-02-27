@@ -244,10 +244,57 @@ This doesn't actually look that good. The model's accuracy has dropped, as has t
 
 The only thing that might be worth checking out, though, is that in the confusion matrix, it looks like there's a better ratio of customers that actually want to buy versus those where the book is mailed but then returned. 
 
+To calculate profitability of the different models, we use the following information;
+cost of mailing = $0.65 / addressee
+cost of book = $15
+Selling price of book = $31.95
+overhead = 0.45*bookcost
+Confusion Matrix and Statistics
+
+And for the first stepwise model;
+          Reference
+Prediction    0    1
+         0 1986  110
+         1  131   73
+```{r}
+nummailed = 131
+numsold = 73
+mailcost = .65*nummailed
+bookcost = 15
+bookprice = 31.95
+overhead = 0.45*bookcost*numsold
+
+profit = (numsold*bookprice) - (mailcost + bookcost*numsold + overhead)
+profit
+```
+
+For the optimized stepwise model;
+          Reference
+Prediction    0    1
+         0 1490  606
+         1   55  149
+```{r}
+nummailed = 55
+numsold = 149
+mailcost = .65*numsold
+bookcost = 15
+bookprice = 31.95
+overhead = 0.45*bookcost*numsold
+
+profit2 = (numsold*bookprice) - (mailcost + bookcost*numsold + overhead)
+profit2
+```
+So, even though the optimized model has a lower accuracy rate, it results in greater profitability, so we should go with that.
+
+
+
+
+
+
 
 The best Logit model therefore, is;
 
-log(1/(1-p)) = -0.289 + 1.244*P_Art - 0.088*Frequency - 0.812*Gender1 - 0.294*P_Cook - 0.282*P_DIY + 0.002*Amount_Purchased - 0.196*P_Child
+log(1/(1-p)) = -0.289 + 1.244*P_Art - 0.088*Frequency - 0.812*Gender1 - 0.294*P_Cook - 0.282*P_DIY + 0.002*Amount_Purchased - 0.196*P_Child, with a cutoff threshold of 0.23 instead of 0.5.
 
 The most influential covariates then, are P_Art(number of art books purchased), Frequency(total number of purchases), Gender, P_Cook(number of cookbooks purchased), P_DIY (number of DIY books purchased), Amount_Purchased (total money spent), and P_Child.
 
@@ -282,7 +329,42 @@ cost of book = $15
 Selling price of book = $31.95
 overhead = 0.45*bookcost
 
+The optimized ratios;
+          Reference
+Prediction    0    1
+         0 1490  606
+         1   55  149
 
+The optimized model was based on a model of 2300 customers, so we can scale the ratios to get new totals for mailed and sold;
+```{r}
+mailedratio = 55/2300
+soldratio = 149/2300
+
+nummailed = mailedratio*50000
+numsold = soldratio*50000
+mailcost = .65*numsold
+bookcost = 15
+bookprice = 31.95
+overhead = 0.45*bookcost*numsold
+
+profit3 = (numsold*bookprice) - (mailcost + bookcost*numsold + overhead)
+profit3
+```
+
+To calculate expected profit of mailing to the entire list;
+```{r}
+nummailed = 50000
+numsold = soldratio*50000
+mailcost = .65*nummailed
+bookcost = 15
+bookprice = 31.95
+overhead = 0.45*bookcost*numsold
+
+profit4 = (numsold*bookprice) - (mailcost + bookcost*numsold + overhead)
+profit4
+```
+
+It is obviously way more profitable to use the optimized logit model than to mail out the entire list.
 
 
 
