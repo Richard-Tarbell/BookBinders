@@ -46,6 +46,8 @@ All three of these models are beneficial in providing insights and predictions w
 
 ### IV. Methodologies
 
+The first model attempted was a linear regression.  This model is not useful for this dataset because the response variable in linear regression must be continuous.  In this case  the response variable Choice is categorical and must be converted to a factor.  If the regression model is used leaving the Choice as numeric, the information it provides is not useful for the criteria we are trying to meet.  
+
 ### V. Data / Cleaning - Richard
 
 ### VI. Findings 
@@ -98,8 +100,8 @@ BBBC_Test_Logit$Gender = as.factor(BBBC_Test_Logit$Gender)
 
 
 ```{r}
-lm.book <- lm(Choice ~ ., data = BBBC_Train)
-summary(lm.book)
+#lm.book <- lm(Choice ~ ., data = BBBC_Train_Logit)
+#summary(lm.book)
 ```
 
 
