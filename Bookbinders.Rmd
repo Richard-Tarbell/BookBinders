@@ -242,6 +242,8 @@ caret::confusionMatrix(as.factor(BBBC_Test_Logit$Choice), as.factor(BBBC_Test_Lo
 
 This doesn't actually look that good. The model's accuracy has dropped, as has the specificity and positive predictive value. Based on these numbers, it would most likely be better to go with the model that has a cutoff of 0.5. 
 
+The only thing that might be worth checking out, though, is that in the confusion matrix, it looks like there's a better ratio of customers that actually want to buy versus those where the book is mailed but then returned. 
+
 
 The best Logit model therefore, is;
 
