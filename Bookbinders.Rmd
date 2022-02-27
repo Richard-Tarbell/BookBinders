@@ -14,24 +14,14 @@ library(car)
 library(broom)
 library(DescTools)
 library(ROCR)
-<<<<<<< HEAD
 library(ResourceSelection)
-```
-
-```{r, include=FALSE}
-BBBC_Train <- read_excel("Data/BBBC-Train.xlsx")
-BBBC_Test = read_excel("Data/BBBC-Test.xlsx")
-=======
 library(e1071)
 ```
 
+
 ```{r, include=FALSE}
 BBBC_Train <- read_excel("Data/BBBC-Train.xlsx",col_names = TRUE)
-<<<<<<< HEAD
->>>>>>> 478c65954d38802cfa506b8174727f63c10a8778
-=======
 BBBC_Test <- read_excel("Data/BBBC-Test.xlsx",col_names = TRUE)
->>>>>>> 418c626b5068d7bc1f7d129d42a3b448a17ce019
 ```
 
 
@@ -54,37 +44,39 @@ SVM
 
 ### VII. Conclusion and Recommendations
 
+
+
 ### Appendix
 
 
-<<<<<<< HEAD
+##### Data importing and cleaning
 
-
-
-
-
-### Logistic Regression Model
 
 Exploration
+
+```{r}
+anyNA(BBBC_Train)
+anyNA(BBBC_Test)
+
+```
+
+
 ```{r}
 str(BBBC_Train)
 head(BBBC_Train)
 ```
 
-=======
-### Data importing and cleaning
->>>>>>> 418c626b5068d7bc1f7d129d42a3b448a17ce019
-
 Remove observation variable, not relevant
 ```{r}
-BBBC_Train_Logit = subset(BBBC_Train, select = -Observation)
-BBBC_Test_Logit = subset(BBBC_Test, select = -Observation)
+BBBC_Train = subset(BBBC_Train, select = -Observation)
+BBBC_Test = subset(BBBC_Test, select = -Observation)
 ```
 
-
-
-Change choice and gender to factors
+Change choice and gender to factors for logistic regression model
 ```{r}
+BBBC_Train_Logit = BBBC_Train
+BBBC_Test_Logit = BBBC_Test
+
 BBBC_Train_Logit$Choice = as.factor(BBBC_Train_Logit$Choice)
 BBBC_Train_Logit$Gender = as.factor(BBBC_Train_Logit$Gender)
 BBBC_Test_Logit$Choice = as.factor(BBBC_Test_Logit$Choice)
@@ -92,46 +84,67 @@ BBBC_Test_Logit$Gender = as.factor(BBBC_Test_Logit$Gender)
 ```
 
 
-Create intial logistic regression model
+
+
+### Linear Regression Model
+
+
+
+
+
+
+
+
+
+
+
+
+### Logistic Regression Model
+
+
+Create initial logistic regression model
 ```{r}
 glm.train = glm(Choice ~ ., data = BBBC_Train_Logit, family = "binomial")
 summary(glm.train)
 ```
 
-
 Remove variables with high multicollinearity
 ```{r}
 vif(glm.train)
+
+```
+
+```{r}
 glm.train = glm(Choice ~ .-Last_purchase, data = BBBC_Train_Logit, family = "binomial")
-vif(glm.train)
-glm.train = glm(Choice ~ .-Last_purchase-First_purchase, data = BBBC_Train_Logit, family = "binomial")
+
 vif(glm.train)
 ```
 
+```{r}
+glm.train = glm(Choice ~ .-Last_purchase-First_purchase, data = BBBC_Train_Logit, family = "binomial")
 
-<<<<<<< HEAD
+vif(glm.train)
+```
+
 Build stepwise model
 ```{r}
 glm.null = glm(Choice ~ 1, data = BBBC_Train_Logit, family = "binomial")
 glm.full = glm(Choice ~ .-Last_purchase-First_purchase, data = BBBC_Train_Logit, family = "binomial")
+
 glm.step1 = step(glm.null, scope = list(upper = glm.full), direction = "both", test = "Chisq", trace = FALSE)
+
 summary(glm.step1)
 ```
-
 
 Goodness of fit
 ```{r}
 hoslem.test(glm.step1$y, fitted(glm.step1), g = 10)
 ```
 
-
 Plot
 ```{r}
 plot(glm.step1, which = 4)
 ```
-
-
-
 
 
 ```{r}
@@ -140,52 +153,10 @@ BBBC_Train_Logit$PredChoice = ifelse(BBBC_Train_Logit$PredProb >= 0.5, 1, 0)
 caret::confusionMatrix(as.factor(BBBC_Train_Logit$Choice), as.factor(BBBC_Train_Logit$PredChoice))
 ```
 
-```
-=======
-```{r}
-# Remove the observed column. Only run once
-BBBC_Train <- BBBC_Train[2:12]
-BBBC_Test <- BBBC_Test[2:12]
-
-head(BBBC_Train)
-```
-
-
-```{r}
-anyNA(BBBC_Train)
-anyNA(BBBC_Test)
-```
-
-#### View training data
-
-```{r}
-str(BBBC_Train)
-```
-
-```{r}
-# Convert to factors
-BBBC_Train$Choice = as.factor(BBBC_Train$Choice)
-BBBC_Train$Gender = as.factor(BBBC_Train$Gender)
-```
-
-#### View training data
-
-```{r}
-str(BBBC_Test)
-```
-
-```{r}
-# Convert to factors
-BBBC_Test$Choice = as.factor(BBBC_Test$Choice)
-BBBC_Test$Gender = as.factor(BBBC_Test$Gender)
-```
 
 
 
-### Linear Regression Model
 
-
-### Logistic Regression Model
 
 
 
@@ -193,14 +164,28 @@ BBBC_Test$Gender = as.factor(BBBC_Test$Gender)
 
 ### SVM Model
 
+```{r}
+BBBC_Train_SVM = BBBC_Train
+BBBC_Test_SVM = BBBC_Test
+```
+
+```{r}
+# Convert to factors
+BBBC_Train_SVM$Choice = as.factor(BBBC_Train_SVM$Choice)
+BBBC_Train_SVM$Gender = as.factor(BBBC_Train_SVM$Gender)
+
+BBBC_Test_SVM$Choice = as.factor(BBBC_Test_SVM$Choice)
+BBBC_Test_SVM$Gender = as.factor(BBBC_Test_SVM$Gender)
+```
+
 #### Use training split on BBBC_Train
 
 ```{r}
 # Splitting data into training and testing sets 70/30 Split
 set.seed(1)
-tr_ind = sample(nrow(BBBC_Train), 0.7*nrow(BBBC_Train), replace=FALSE)
-book.train.split = BBBC_Train[tr_ind,]
-book.test.split = BBBC_Train[-tr_ind,]
+tr_ind = sample(nrow(BBBC_Train_SVM), 0.7*nrow(BBBC_Train_SVM), replace=FALSE)
+book.train.split = BBBC_Train_SVM[tr_ind,]
+book.test.split = BBBC_Train_SVM[-tr_ind,]
 ```
 
 ```{r}
@@ -219,6 +204,7 @@ mysvm = svm(formula = svm_form,
             cost = tuned$best.parameters$cost)
 
 summary(mysvm)
+
 ```
 
 ```{r}
@@ -228,25 +214,15 @@ svmpredict = predict(mysvm,
                      type = "response")
 
 caret::confusionMatrix(svmpredict, book.test.split$Choice)
+
 ```
 
 ```{r}
 svmpredict = predict(mysvm, 
-                     BBBC_Test, 
+                     BBBC_Test_SVM, 
                      type = "response")
 
-caret::confusionMatrix(svmpredict, BBBC_Test$Choice)
+caret::confusionMatrix(svmpredict, BBBC_Test_SVM$Choice)
+
 ```
 
-
-
-
->>>>>>> 478c65954d38802cfa506b8174727f63c10a8778
-
-
-<<<<<<< HEAD
-```{r}
-caret::confusionMatrix(as.factor(BankTrain$y), as.factor(BankTrain$PredChoice.AIC))
-=======
-
->>>>>>> 418c626b5068d7bc1f7d129d42a3b448a17ce019
