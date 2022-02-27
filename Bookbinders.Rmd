@@ -14,14 +14,12 @@ library(car)
 library(broom)
 library(DescTools)
 library(ROCR)
-<<<<<<< HEAD
 library(ResourceSelection)
 ```
 
 ```{r, include=FALSE}
 BBBC_Train <- read_excel("Data/BBBC-Train.xlsx")
 BBBC_Test = read_excel("Data/BBBC-Test.xlsx")
-=======
 library(e1071)
 ```
 
@@ -135,10 +133,109 @@ plot(glm.step1, which = 4)
 
 
 ```{r}
-BBBC_Train_Logit$PredProb = predict.glm(glm.step1, newdata = BBBC_Train_Logit, type = "response")
+BBBC_Train_Logit$PredProb = predict.glm(glm.step1, BBBC_Train_Logit, type = "response")
 BBBC_Train_Logit$PredChoice = ifelse(BBBC_Train_Logit$PredProb >= 0.5, 1, 0)
 caret::confusionMatrix(as.factor(BBBC_Train_Logit$Choice), as.factor(BBBC_Train_Logit$PredChoice))
 ```
+The accuracy of this model is not the best, but the positive predictive value, which is what we care about, is pretty good.
+
+
+
+Run model with test data;
+```{r}
+BBBC_Test_Logit$PredProb = predict.glm(glm.step1, BBBC_Test_Logit, type = "response")
+BBBC_Test_Logit$PredChoice = ifelse(BBBC_Test_Logit$PredProb >= 0.5, 1, 0)
+caret::confusionMatrix(as.factor(BBBC_Test_Logit$Choice), as.factor(BBBC_Test_Logit$PredChoice))
+```
+
+The model has better accuracy with the test data, and still has a high positive predictive value. It could get better by calibrating the sensitivity and specificity.
+
+
+Calculate and plot AUC
+```{r}
+pred_test = predict(glm.step1, BBBC_Test_Logit, type = "response")
+response_test = BBBC_Test_Logit$Choice
+predict_test = prediction(pred_test, response_test)
+auc_test = round(as.numeric(performance(predict_test, measure = "auc")@y.values),3)
+perform = performance(predict_test, "tpr","fpr")
+plot(perform, colorize = T, main = "ROC Curve")
+text(0.5,0.5, paste("AUC:", auc_test))
+```
+
+
+
+```{r}
+plot(unlist(performance(predict_test, "sens")@x.values),
+     unlist(performance(predict_test, "sens")@y.values),
+     type = "l",
+     lwd = 2,
+     ylab = "Sensitivity",
+     xlab = "Cutoff",
+     main = paste("Maximized Cutoff", "AUC: ", auc_test))
+
+par(new = TRUE)
+
+plot(unlist(performance(predict_test, "spec")@x.values),
+     unlist(performance(predict_test, "spec")@y.values),
+     type = "l",
+     lwd = 2,
+     col = "red")
+
+axis(4, at=seq(0, 1, 0.2))
+mtext("Specificity", side = 4, col = 'red')
+
+min.diff.glm = which.min(abs(unlist(performance(predict_test, "sens")@y.values) - 
+                               unlist(performance(predict_test, "spec")@y.values)))
+min.x.glm = unlist(performance(predict_test, "sens")@x.values)[min.diff.glm]
+min.y.glm = unlist(performance(predict_test, "sens")@y.values)[min.diff.glm]
+optimal.glm = min.x.glm
+
+abline(h = min.y.glm, lty = 3)
+abline(v = min.x.glm, lty = 3)
+text(min.x.glm,0,paste("optimal threshold=",round(optimal.glm,2)), pos = 4)
+```
+So now we know that the optimal cutoff threshold is 0.23, so we can refit the predictions to optimize the sensitivity and specificity.
+
+Refit predictions and confusion matrix;
+```{r}
+BBBC_Test_Logit$PredProb = predict.glm(glm.step1, BBBC_Test_Logit, type = "response")
+BBBC_Test_Logit$PredChoice = ifelse(BBBC_Test_Logit$PredProb >= 0.23, 1, 0)
+caret::confusionMatrix(as.factor(BBBC_Test_Logit$Choice), as.factor(BBBC_Test_Logit$PredChoice))
+```
+
+This doesn't actually look that good. The model's accuracy has dropped, as has the specificity and positive predictive value. Based on these numbers, it would most likely be better to go with the model that has a cutoff of 0.5. 
+
+
+The best Logit model therefore, is;
+
+log(1/(1-p)) = -0.289 + 1.244*P_Art - 0.088*Frequency - 0.812*Gender1 - 0.294*P_Cook - 0.282*P_DIY + 0.002*Amount_Purchased - 0.196*P_Child
+
+The most influential covariates then, are P_Art(number of art books purchased), Frequency(total number of purchases), Gender, P_Cook(number of cookbooks purchased), P_DIY (number of DIY books purchased), Amount_Purchased (total money spent), and P_Child.
+
+Breaking down how each covariate influences the model;
+
+The odds of a customer buying The Art History of Florence change by a factor of 3.46 with each additional art book purchased, assuming other variables remain constant.
+
+The odds of a customer buying The Art History of Florence change by a factor of 0.915 with each additional book purchased, assuming other variables remain constant.
+
+The odds of a male customer are .443 times that of a female customer, assuming other variables remain constant.
+
+The odds of a customer buying The Art History of Florence change by a factor of 0.745 with each additional cook book purchased, assuming other variables remain constant.
+
+The odds of a customer buying The Art History of Florence change by a factor of 1.002 with each additional dollar spent, assuming other variables remain constant.
+
+The odds of a customer buying The Art History of Florence change by a factor of 1.21 with each additional children's book purchased, assuming other variables remain constant.
+```{r}
+exp(1.244)
+exp(-0.088)
+exp(-0.812)
+exp(-0.294)
+exp(0.002)
+exp(0.196)
+```
+
+
+
 
 ```
 =======
