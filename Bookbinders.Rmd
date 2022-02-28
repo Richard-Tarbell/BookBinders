@@ -29,24 +29,29 @@ BBBC_Test <- read_excel("Data/BBBC-Test.xlsx",col_names = TRUE)
 ```
 
 
-### I. Executive Summary - Richard
-LM
+### I. Executive Summary 
+In an effort to find the best predictions for which customers would purchase the book, The Art History of Florence, we ran three different models.  The model we felt performed the best was the logistic regression model.  This decision was based on the results seen in the confusion matrix, which showed the highest number of predicted customers who purchased the book.  The linear regression model was unsuccessful since the variable of interest is binary and not continuous.   The Support Vector Machine (SVM) was tested with three different hyper parameters, but was still not able to perform as well as the logistic model due to the non purchasing group being over represented in the data set.  
 
-Logit
+In the future using the either the logistic model or the SVM with data that is more balanced would provide the best results in finding which customers to target for mail campaigns.  Using these models provides a much greater profit for the Bookbinders Book Club (BBBC).  These models would also be able to be customized for different regions and campaigns. 
 
-SVM
 
 ### II. The Problem - Austin
 
+<<<<<<< HEAD
 The problem for the Bookbinder's Club is to determine how to best maximize their profitability by minimizing the number of customers that they mail books to who do not end up purchasing them. The goal is to develop a model by which they can identify the customers whom are most interested in the book of the month. 
 
+This can be best done by examining a set of different customer attributes, identifying which are most significant to their likelihood of purchasing the book, and then developing a model to fit their customer database. The main hurdle for this is to decide which type of model should be developed; linear regression, a logistic regression model, or a support vector machine.
+
 ### III. Review of Related Literature - Christine
+=======
+### III. Review of Related Literature 
+>>>>>>> aade24faa359cd12f54316750b452907658098cc
 
 Linear Regression is a parametric model used to find if any explanatory variables influence the response variable.  There are four assumptions for linear regression.  The first is the linear relationship between X and Y.  The second is normal distribution.  The third is homoscedasticity.  Finally, all observations must be independent of each other.  The model finds the best line to predict the behavior of Y, when X is increased by 1 unit.  Y must be continuous for the model to work.
 
 Logistic Regression is used to predict the probability of an outcome based on given variables, or to see how variables are related to the outcome.  For the logistic model Y is binary and not continuous.  Interpretation of the logistic model is not as straightforward and requires an understanding of odds and odds ratio.  
 
-Support Vector Machine (SVM) is a popular model that was developed in the 1990s by Vladimir Vapnik and Corinna Cortes.  This model finds a hyperplane that separates the data as well as possible and allows some misclassification. To accommodate a non-linear boundary between classes, SVM enlarges the feature space using polynomial terms.  The SVM enlarges this feature space, using kernel tricks, in a way that is efficient with these computations. 
+Support Vector Machine (SVM) is a popular model that was developed in the 1990s by Vladimir Vapnik and Corinna Cortes.  This model finds a hyperplane that separates the data as well as possible and allows some misclassifications. To accommodate a non-linear boundary between classes, SVM enlarges the feature space using polynomial terms.  The SVM enlarges this feature space, using kernel tricks, in a way that is efficient with these computations. 
 
 All three of these models are beneficial in providing insights and predictions when applied to marketing campaign selections.
 
@@ -78,6 +83,7 @@ The variables `Choice` and `Gender` were both treated as numeric variables withi
 
 ### VI. Findings 
 
+The linear regression is not able to provide useful information for this problem since the variable of interest is binary and not continuous.  
 
 Using a 3 different kinds of model in determining what parameters lead to customers purchasing a certain book. This was important because the Bookbinders Book Club doesn't want to waste money sending out mailings to customers who will not end up purchasing a book. With our three models we tested Linear Regression, Logistic Regression, and Support Vector Machines.
 
