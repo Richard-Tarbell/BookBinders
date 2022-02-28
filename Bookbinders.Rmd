@@ -2,7 +2,10 @@
 title: "Bookbinders Case Study"
 author: "Austin Vanderlyn, Christine Kelly, Richard Tarbell"
 date: "2/16/2022"
-output: pdf_document
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
@@ -20,6 +23,7 @@ library(e1071)
 
 
 ```{r, include=FALSE}
+set.seed(100)
 BBBC_Train <- read_excel("Data/BBBC-Train.xlsx",col_names = TRUE)
 BBBC_Test <- read_excel("Data/BBBC-Test.xlsx",col_names = TRUE)
 ```
@@ -48,6 +52,16 @@ All three of these models are beneficial in providing insights and predictions w
 
 The first model attempted was a linear regression.  This model is not useful for this dataset because the response variable in linear regression must be continuous.  In this case  the response variable Choice is categorical and must be converted to a factor.  If the regression model is used leaving the Choice as numeric, the information it provides is not useful for the criteria we are trying to meet.  
 
+
+
+
+
+Along with the Linear and Logit model we performed tests using the SVM models. Some advantages of using SVM are its versatility when working with high dimensional spaces and it's ability to be memory efficient. The SVM model used for the BookBinders took two hyperparameters as input, gamma and cost. The gamma hyperparameter is used to give curvature weight of the decision boundary or how far the influence of a single training sample reaches. The cost hyperparameter is used to control regularization which tells the algorithm how much you wish to misclassify each training sample. Testing the SVM models we have various kernels we can use Radial, Linear, Polynomial, and Sigmoid. In order to reduce overfitting we start with the simplest model which is the linear SVM.
+
+
+
+
+
 ### V. Data / Cleaning - Richard
 
 The datasets required minimal cleaning. Both the Train (`BBBC_Train`) and Test (`BBBC_Test`) datasets originally had 12 variables and the Training set consisted of 1600 observations while the Testing set had 2300. Performing basic analysis of the data we saw there were no missing values and there happened to be a column in each titled `Observation`. We removed this column because it would add no significant value to our models.
@@ -61,6 +75,146 @@ The variables `Choice` and `Gender` were both treated as numeric variables withi
 
 
 ### VI. Findings 
+
+
+Using a 3 different kinds of model in determining what parameters lead to customers purchasing a certain book. This was important because the Bookbinders Book Club doesn't want to waste money sending out mailings to customers who will not end up purchasing a book. With our three models we tested Linear Regression, Logistic Regression, and Support Vector Machines.
+
+Before we performed logistic regression we removed `Last_Purchase` and `First_Purchase` from the model due to their high collinearity. After this we performed a step wise selection which allowed us to remove the `P_Youth` predictor as it was insignificant. This left us with a final model of 
+$\log\frac{1}{(1-p)})$ = -0.289 + 1.244\*`P_Art` - 0.088\*`Frequency` - 0.812\*`Gender1` - 0.294\*`P_Cook` - 0.282\*`P_DIY` + 0.002\*`Amount_Purchased` - 0.196\*`P_Child`. 
+
+Using the equation for logistic regression and taking the exponential for each coefficient value we can state the following,
+
+The odds of a customer buying The Art History of Florence change by a factor of 3.46 with each additional art book purchased, assuming other variables remain constant.
+
+The odds of a customer buying The Art History of Florence change by a factor of 0.915 with each additional book purchased, assuming other variables remain constant.
+
+The odds of a male customer are .443 times that of a female customer, assuming other variables remain constant.
+
+The odds of a customer buying The Art History of Florence change by a factor of 0.745 with each additional cook book purchased, assuming other variables remain constant.
+
+The odds of a customer buying The Art History of Florence change by a factor of 1.002 with each additional dollar spent, assuming other variables remain constant.
+
+The odds of a customer buying The Art History of Florence change by a factor of 1.21 with each additional children’s book purchased, assuming other variables remain constant.
+
+
+**Logistic Regression with 0.5 cutoff**
+
+\begin{center}
+\begin{tabular}{|c || c c|} 
+ \hline
+   & Reference &   \\ [0.5ex] 
+ \hline\hline
+ Prediction & 0 & 1 \\ 
+ \hline
+ 0 & 1986 & 110 \\
+ \hline
+ 1 & 131 & 73 \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+
+**Logistic Regression with optimal cutoff (0.23)**
+
+\begin{center}
+\begin{tabular}{|c || c c|} 
+ \hline
+   & Reference &   \\ [0.5ex] 
+ \hline\hline
+ Prediction & 0 & 1 \\ 
+ \hline
+ 0 & 1490 & 606 \\
+ \hline
+ 1 & 55 & 149 \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+
+Following the logistic regression was the test of the Support Vector Machine method using Linear, Radial, and Polynomial Kernels. A wide range of hyperparameters were used for these kernels. For the Linear and Radial kernels we used gamma values with a range defined by the sequence `seq(.01, .1, by = .01)`, with all three we tested cost with a range defined by the sequence `cost = seq(.1, 1, by = .1)`. Finally for the polynomial kernel the degree sequence was defined by `seq(2, 4, by = 1)` and the tested coef0 values came from an array of numbers  `(0.01, 0.1, 0.25, 0.5, 0.75, 1, 2, 3)`. The following confusion matrices resulted.
+
+**SVM with Linear Kernel**
+
+\begin{center}
+\begin{tabular}{|c || c c|} 
+ \hline
+   & Reference &   \\ [0.5ex] 
+ \hline\hline
+ Prediction & 0 & 1 \\ 
+ \hline
+ 0 & 2088 & 192 \\
+ \hline
+ 1 & 8 & 12 \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+
+**SVM with Radial Kernel**
+
+\begin{center}
+\begin{tabular}{|c || c c|} 
+ \hline
+   & Reference &   \\ [0.5ex] 
+ \hline\hline
+ Prediction & 0 & 1 \\ 
+ \hline
+ 0 & 2047 & 160 \\
+ \hline
+ 1 & 49 & 44 \\
+ \hline
+\end{tabular}
+\end{center}
+
+**SVM with Polynomial Kernel**
+
+\begin{center}
+\begin{tabular}{|c || c c|} 
+ \hline
+   & Reference &   \\ [0.5ex] 
+ \hline\hline
+ Prediction & 0 & 1 \\ 
+ \hline
+ 0 & 2018 & 140 \\
+ \hline
+ 1 & 78 & 64 \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+Comparing the Logistic Regression Model and the SVMs we can view the accuracy's and how well the models predicted false positives or false negatives.
+
+
+\begin{center}
+\begin{tabular}{|c | c c c c||} 
+ \hline
+  & Logit & SVM-Linear & SVM-Radial & SVM-Polynomial \\ [0.5ex] 
+ \hline\hline
+ Accuracy & 0.9043 & 0.913 & 0.9091 & 0.9052 \\ 
+ \hline
+ Sensitivity & 0.9123 & 0.9962 & 0.9766 & 0.9628 \\
+ \hline
+ Specificity & 0.6913 & 0.0588 & 0.2157 & 0.3137 \\
+ \hline
+ AUC & 0.787 &  &  &  \\
+ \hline
+ Cost &  & 0.3 & 0.8 & 1 \\
+ \hline
+ Degree &  &  &  & 2 \\ 
+ \hline
+ Coef0 &  &  &  & 0.5 \\ 
+ \hline
+\end{tabular}
+\end{center}
+
+
+
+
+
 
 ### VII. Conclusion and Recommendations
 
@@ -390,41 +544,131 @@ book.test.split = BBBC_Train_SVM[-tr_ind,]
 ```
 
 
+#### SVM with Linear Kernel
+
 ```{r}
 svm_form = Choice ~ .
 
-tuned = tune.svm(svm_form, data = book.train.split, 
+tuned.linear = tune.svm(svm_form, data = book.train.split,
+                 kernel = "linear",
+                 gamma = seq(.01, .1, by = .01), 
+                 cost = seq(.1, 1, by = .1))
+```
+
+```{r}
+mysvm.linear = svm(formula = svm_form, 
+            data = book.train.split, 
+            gamma =tuned.linear$best.parameters$gamma, 
+            cost = tuned.linear$best.parameters$cost)
+
+summary(mysvm.linear)
+
+```
+
+```{r}
+# Predict on the test split
+predict.test.linear = predict(mysvm.linear, 
+                     book.test.split, 
+                     type = "response")
+
+caret::confusionMatrix(predict.test.linear, book.test.split$Choice)
+
+```
+
+
+```{r}
+predict.test.linear = predict(mysvm.linear, 
+                     BBBC_Test_SVM, 
+                     type = "response")
+
+caret::confusionMatrix(predict.test.linear, BBBC_Test_SVM$Choice)
+
+```
+
+
+
+
+#### SVM with Radial Kernel
+
+```{r}
+svm_form = Choice ~ .
+
+tuned.radial = tune.svm(svm_form, data = book.train.split, 
                  gamma = seq(.01, .1, by = .01), 
                  cost = seq(.1, 1, by = .1))
 ```
 
 
 ```{r}
-mysvm = svm(formula = svm_form, 
+mysvm.radial = svm(formula = svm_form, 
             data = book.train.split, 
-            gamma =tuned$best.parameters$gamma, 
-            cost = tuned$best.parameters$cost)
+            gamma =tuned.radial$best.parameters$gamma, 
+            cost = tuned.radial$best.parameters$cost)
 
-summary(mysvm)
+summary(mysvm.radial)
 
 ```
 
 ```{r}
 # Predict on the test split
-svmpredict = predict(mysvm, 
+svmpredict.radial = predict(mysvm.radial, 
                      book.test.split, 
                      type = "response")
 
-caret::confusionMatrix(svmpredict, book.test.split$Choice)
+caret::confusionMatrix(svmpredict.radial, book.test.split$Choice)
 
 ```
 
 ```{r}
-svmpredict = predict(mysvm, 
+predict.test.radial = predict(mysvm.radial, 
                      BBBC_Test_SVM, 
                      type = "response")
 
-caret::confusionMatrix(svmpredict, BBBC_Test_SVM$Choice)
+caret::confusionMatrix(predict.test.radial, BBBC_Test_SVM$Choice)
 
 ```
+
+
+
+
+
+#### SVM with Polynomial Kernel
+
+```{r}
+svm_form = Choice ~ .
+
+tuned.poly = tune.svm(svm_form, data = book.train.split,
+                      kernel = "polynomial",
+                      degree = seq(2, 4, by = 1), 
+                      coef0 = c(0.01, 0.1, 0.25, 0.5, 0.75, 1, 2, 3), 
+                      cost = seq(.1, 1, by = .1))
+```
+
+
+```{r}
+mysvm.poly = tuned.poly$best.model
+
+summary(mysvm.poly)
+
+```
+
+```{r}
+# Predict on the test split
+svmpredict.poly = predict(mysvm.poly, 
+                     book.test.split, 
+                     type = "response")
+
+caret::confusionMatrix(svmpredict.poly, book.test.split$Choice)
+
+```
+
+```{r}
+predict.test.poly = predict(mysvm.poly, 
+                     BBBC_Test_SVM, 
+                     type = "response")
+
+caret::confusionMatrix(predict.test.poly, BBBC_Test_SVM$Choice)
+
+```
+
 
