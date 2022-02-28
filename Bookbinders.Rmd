@@ -40,7 +40,7 @@ Linear Regression is a parametric model used to find if any explanatory variable
 
 Logistic Regression is used to predict the probability of an outcome based on given variables, or to see how variables are related to the outcome.  For the logistic model Y is binary and not continuous.  Interpretation of the logistic model is not as straightforward and requires an understanding of odds and odds ratio.  
 
-Support Vector Machine (SVM) is a popular model that was developed in the 1990s by Vladimir Vapnik and Corinna Cortes.  This model finds a hyperplane that separates the data as well as possible and allows some misclassification. To accommodate a non-linear boundary between classes, SVM enlarges the feature space using polynomial terms.  The SVM enlarges this feature space, using kernel tricks, in a way that is efficient with these computations. 
+Support Vector Machine (SVM) is a popular model that was developed in the 1990s by Vladimir Vapnik and Corinna Cortes.  This model finds a hyperplane that separates the data as well as possible and allows some misclassifications. To accommodate a non-linear boundary between classes, SVM enlarges the feature space using polynomial terms.  The SVM enlarges this feature space, using kernel tricks, in a way that is efficient with these computations. 
 
 All three of these models are beneficial in providing insights and predictions when applied to marketing campaign selections.
 
