@@ -2,7 +2,10 @@
 title: "Bookbinders Case Study"
 author: "Austin Vanderlyn, Christine Kelly, Richard Tarbell"
 date: "2/16/2022"
-output: pdf_document
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -15,19 +18,12 @@ library(broom)
 library(DescTools)
 library(ROCR)
 library(ResourceSelection)
-<<<<<<< HEAD
-```
-
-```{r, include=FALSE}
-BBBC_Train <- read_excel("Data/BBBC-Train.xlsx")
-BBBC_Test = read_excel("Data/BBBC-Test.xlsx")
-=======
->>>>>>> 67d8d4d30e2a91c7b4155e6c231dabc59edf4cd5
 library(e1071)
 ```
 
 
 ```{r, include=FALSE}
+set.seed(100)
 BBBC_Train <- read_excel("Data/BBBC-Train.xlsx",col_names = TRUE)
 BBBC_Test <- read_excel("Data/BBBC-Test.xlsx",col_names = TRUE)
 ```
@@ -56,15 +52,179 @@ All three of these models are beneficial in providing insights and predictions w
 
 The first model attempted was a linear regression.  This model is not useful for this dataset because the response variable in linear regression must be continuous.  In this case  the response variable Choice is categorical and must be converted to a factor.  If the regression model is used leaving the Choice as numeric, the information it provides is not useful for the criteria we are trying to meet.  
 
+
+
+
+
+Along with the Linear and Logit model we performed tests using the SVM models. Some advantages of using SVM are its versatility when working with high dimensional spaces and it's ability to be memory efficient. One issue we ran into with the SVM was it's poor ability to handle class imbalance.The SVM model used for the BookBinders took two hyperparameters as input, gamma and cost. The gamma hyperparameter is used to give curvature weight of the decision boundary or how far the influence of a single training sample reaches. The cost hyperparameter is used to control regularization which tells the algorithm how much you wish to misclassify each training sample. Testing the SVM models we have various kernels we can use Radial, Linear, Polynomial, and Sigmoid. In order to reduce overfitting we start with the simplest model which is the linear SVM and worked our way up to polynomial excluding the Sigmoid for now. Using a Train/Test split on the Training sample we were able to narrow down a model we were that was able to produce high Specificity values on the Test data.
+
+
+
+
+
 ### V. Data / Cleaning - Richard
+
+The datasets required minimal cleaning. Both the Train (`BBBC_Train`) and Test (`BBBC_Test`) datasets originally had 12 variables and the Training set consisted of 1600 observations while the Testing set had 2300. Performing basic analysis of the data we saw there were no missing values and there happened to be a column in each titled `Observation`. We removed this column because it would add no significant value to our models.
+
+Checking for correlations within the pairwise plot the strongest correlation came out to be between `Last_Purchase` and `First_Purchase` which resemble the months since the customers last purchase and the months since their first purchase. With this being the only positive correlation > 0.7 we may run into the issue of multicollinearity. 
+
+The variables `Choice` and `Gender` were both treated as numeric variables within the data however we converted these to factor variables given their binary values. Further exploring these variables we discovered that approximately 70% of customers who did not a purchase were Males and \~54% of the customers who did make a purchase were also Males. Comparing the customers who did not make a purchase to those who did we find a class imbalance with only 25% of the `Choice` class to being customers who did make a purchase. This may cause issues in model accuracy given that SVMs do not perform well on imbalanced datasets.
+
+
+
+
 
 ### VI. Findings 
 
+
+Using a 3 different kinds of model in determining what parameters lead to customers purchasing a certain book. This was important because the Bookbinders Book Club doesn't want to waste money sending out mailings to customers who will not end up purchasing a book. With our three models we tested Linear Regression, Logistic Regression, and Support Vector Machines.
+
+Before we performed logistic regression we removed `Last_Purchase` and `First_Purchase` from the model due to their high collinearity. After this we performed a step wise selection which allowed us to remove the `P_Youth` predictor as it was insignificant. This left us with a final model of 
+$\log\frac{1}{(1-p)})$ = -0.289 + 1.244\*`P_Art` - 0.088\*`Frequency` - 0.812\*`Gender1` - 0.294\*`P_Cook` - 0.282\*`P_DIY` + 0.002\*`Amount_Purchased` - 0.196\*`P_Child`. 
+
+Using the equation for logistic regression and taking the exponential for each coefficient value we can state the following,
+
+The odds of a customer buying The Art History of Florence change by a factor of 3.46 with each additional art book purchased, assuming other variables remain constant.
+
+The odds of a customer buying The Art History of Florence change by a factor of 0.915 with each additional book purchased, assuming other variables remain constant.
+
+The odds of a male customer are .443 times that of a female customer, assuming other variables remain constant.
+
+The odds of a customer buying The Art History of Florence change by a factor of 0.745 with each additional cook book purchased, assuming other variables remain constant.
+
+The odds of a customer buying The Art History of Florence change by a factor of 1.002 with each additional dollar spent, assuming other variables remain constant.
+
+The odds of a customer buying The Art History of Florence change by a factor of 1.21 with each additional children’s book purchased, assuming other variables remain constant.
+
+
+**Logistic Regression with 0.5 cutoff**
+
+\begin{center}
+\begin{tabular}{|c || c c|} 
+ \hline
+   & Reference &   \\ [0.5ex] 
+ \hline\hline
+ Prediction & 0 & 1 \\ 
+ \hline
+ 0 & 1986 & 110 \\
+ \hline
+ 1 & 131 & 73 \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+
+**Logistic Regression with optimal cutoff (0.23)**
+
+\begin{center}
+\begin{tabular}{|c || c c|} 
+ \hline
+   & Reference &   \\ [0.5ex] 
+ \hline\hline
+ Prediction & 0 & 1 \\ 
+ \hline
+ 0 & 1490 & 606 \\
+ \hline
+ 1 & 55 & 149 \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+
+Following the logistic regression was the test of the Support Vector Machine method using Linear, Radial, and Polynomial Kernels. A wide range of hyperparameters were used for these kernels. For the Linear and Radial kernels we used gamma values with a range defined by the sequence `seq(.01, .1, by = .01)`, with all three we tested cost with a range defined by the sequence `cost = seq(.1, 1, by = .1)`. Finally for the polynomial kernel the degree sequence was defined by `seq(2, 4, by = 1)` and the tested coef0 values came from an array of numbers  `(0.01, 0.1, 0.25, 0.5, 0.75, 1, 2, 3)`. The following confusion matrices resulted.
+
+**SVM with Linear Kernel**
+
+\begin{center}
+\begin{tabular}{|c || c c|} 
+ \hline
+   & Reference &   \\ [0.5ex] 
+ \hline\hline
+ Prediction & 0 & 1 \\ 
+ \hline
+ 0 & 2088 & 192 \\
+ \hline
+ 1 & 8 & 12 \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+
+**SVM with Radial Kernel**
+
+\begin{center}
+\begin{tabular}{|c || c c|} 
+ \hline
+   & Reference &   \\ [0.5ex] 
+ \hline\hline
+ Prediction & 0 & 1 \\ 
+ \hline
+ 0 & 2047 & 160 \\
+ \hline
+ 1 & 49 & 44 \\
+ \hline
+\end{tabular}
+\end{center}
+
+**SVM with Polynomial Kernel**
+
+\begin{center}
+\begin{tabular}{|c || c c|} 
+ \hline
+   & Reference &   \\ [0.5ex] 
+ \hline\hline
+ Prediction & 0 & 1 \\ 
+ \hline
+ 0 & 2018 & 140 \\
+ \hline
+ 1 & 78 & 64 \\
+ \hline
+\end{tabular}
+\end{center}
+
+
+Comparing the Logistic Regression Model and the SVMs we can view the accuracy's and how well the models predicted false positives or false negatives.
+
+
+\begin{center}
+\begin{tabular}{|c | c c c c||} 
+ \hline
+  & Logit & SVM-Linear & SVM-Radial & SVM-Polynomial \\ [0.5ex] 
+ \hline\hline
+ Accuracy & 0.7126 & 0.913 & 0.9091 & 0.9052 \\ 
+ \hline
+ Specificity & 0.9644 & 0.9962 & 0.9766 & 0.9628 \\
+ \hline
+ Sensitivity & 0.1974 & 0.0588 & 0.2157 & 0.3137 \\
+ \hline
+ AUC & 0.787 &  &  &  \\
+ \hline
+ Cost &  & 0.3 & 0.8 & 1 \\
+ \hline
+ Degree &  &  &  & 2 \\ 
+ \hline
+ Coef0 &  &  &  & 0.5 \\ 
+ \hline
+\end{tabular}
+\end{center}
+
+
+
+
 ### VII. Conclusion and Recommendations
 
+Performing our analysis we tested three different modeling techniques in order to find the best procedure to predict if a customer would purchase The Art History of Florence. Using Linear Regression, Logistic Regression, and Support Vector Machines we analyzed a training dataset to find the best predictors and hyper parameters to use when predicting a customer and their purchase choice. With the Support Vector Machines (SVM) we tested three different kernels Linear, Radial, and Polynomial. Out of the three the Linear kernel performed the best with accuracy of 91.3%. The SVM-Linear was extremely successful in correctly classifying customers who did not make a purchase, however, it did fall short in successfully predicting customers who did make a purchase. This can be seen in the confusion matrix and by the low sensitivity/high specificity outputted by the model. This performance is likely due to the class imbalance found in the training set which is one of SVM's weaknesses.
+
+In order to determine which customers the campaign should target the Bookbinders Book Club should use the logistic regression model. The logit model was the most successful in predicting which customers did purchase a book. While our logistic regression model did not have the highest accuracy (0.7126) or the best sensitivity/specificity it was was the most successful in predicting customers who did purchase a book as seen in the confusion matrix table.
+
+If we wanted to make our models more accurate with higher sensitivity and specificity values we would potentially need a new sample of the data where the class distribution is more evenly balanced. If the company wanted to develop expertise in any of the models we would recommend logistic regression and SVM. Both of these models were accurate however SVM was not able to perform at it's peak due to the class imbalance. For future modeling efforts we recommend having a simple yet straight forward way to pull data from the database that is evenly distributed with all the predictors required. This can be automated through a dashboard or using SQL queries and a modeling script in R or Python to automatically perform accurate analysis for the company.
 
 
-### Appendix
+
+### Appendixs
 
 
 ##### Data importing and cleaning
@@ -72,34 +232,93 @@ The first model attempted was a linear regression.  This model is not useful for
 
 Exploration
 
+Any missing values?
 ```{r}
 anyNA(BBBC_Train)
 anyNA(BBBC_Test)
-
 ```
 
 
+Check the size of the training and test datasets
+```{r}
+dim(BBBC_Train)
+
+dim(BBBC_Test)
+```
+
+Class imbalance
+```{r}
+table(BBBC_Train$Choice)
+```
+
+View details of the data
 ```{r}
 str(BBBC_Train)
-head(BBBC_Train)
 ```
 
-Remove observation variable, not relevant
+
+
+Remove `Observation` variable and convert `Choice` to factor
+
 ```{r}
 BBBC_Train = subset(BBBC_Train, select = -Observation)
 BBBC_Test = subset(BBBC_Test, select = -Observation)
+
+BBBC_Train$Choice = as.factor(BBBC_Train$Choice)
+BBBC_Test$Choice = as.factor(BBBC_Test$Choice)
 ```
 
-Change choice and gender to factors for logistic regression model
+
+
+```{r, include=FALSE}
+# code to get histograms in pair plot
+panel.hist <- function(x, ...) {
+    usr <- par("usr")
+    on.exit(par(usr))
+    par(usr = c(usr[1:2], 0, 1.5))
+    his <- hist(x, plot = FALSE)
+    breaks <- his$breaks
+    nB <- length(breaks)
+    y <- his$counts
+    y <- y/max(y)
+    rect(breaks[-nB], 0, breaks[-1], y, col = rgb(0, 1, 1, alpha = 0.5), ...)
+    # lines(density(x), col = 2, lwd = 2) # Uncomment to add density lines
+}
+
+panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
+{
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(0, 1, 0, 1))
+    r <- abs(cor(x, y))
+    txt <- format(c(r, 0.123456789), digits = digits)[1]
+    txt <- paste0(prefix, txt)
+    if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+    text(0.5, 0.5, txt, cex = cex.cor)
+}
+```
+
+```{r, fig.height=8, fig.width=12}
+pairs.test = subset(BBBC_Train, select = -Choice)
+pairs.test = subset(pairs.test, select = -Gender)
+
+pairs(pairs.test,
+      upper.panel = panel.cor,
+      diag.panel = panel.hist)
+```
+
+
+
 ```{r}
-BBBC_Train_Logit = BBBC_Train
-BBBC_Test_Logit = BBBC_Test
-
-BBBC_Train_Logit$Choice = as.factor(BBBC_Train_Logit$Choice)
-BBBC_Train_Logit$Gender = as.factor(BBBC_Train_Logit$Gender)
-BBBC_Test_Logit$Choice = as.factor(BBBC_Test_Logit$Choice)
-BBBC_Test_Logit$Gender = as.factor(BBBC_Test_Logit$Gender)
+ggplot(data = BBBC_Train,
+       aes(x = factor(ifelse(Choice == 1, "Purchase", "No Purchase")), 
+           fill = factor(ifelse(Gender == 0, "Female", "Male")))) + 
+    geom_bar(alpha =1, color = "black", stat = "count") + 
+    scale_fill_manual(values = c("lavender", "orange")) +
+    geom_text(aes(label = scales::percent(..count.. / tapply(..count.., ..x.., sum)[as.character(..x..)])), stat = "count", position = position_stack(vjust=0.5)) +
+    labs(fill = "Gender", y="", x="")
 ```
+
+
 
 
 
@@ -108,8 +327,8 @@ BBBC_Test_Logit$Gender = as.factor(BBBC_Test_Logit$Gender)
 
 
 ```{r}
-#lm.book <- lm(Choice ~ ., data = BBBC_Train_Logit)
-#summary(lm.book)
+lm.book <- lm(as.numeric(Choice) ~ ., data = BBBC_Train)
+summary(lm.book)
 ```
 
 
@@ -122,6 +341,18 @@ BBBC_Test_Logit$Gender = as.factor(BBBC_Test_Logit$Gender)
 
 
 ### Logistic Regression Model
+
+
+Change gender to factor for logistic regression model
+```{r}
+BBBC_Train_Logit = BBBC_Train
+BBBC_Test_Logit = BBBC_Test
+
+BBBC_Train_Logit$Gender = as.factor(BBBC_Train_Logit$Gender)
+
+BBBC_Test_Logit$Gender = as.factor(BBBC_Test_Logit$Gender)
+```
+
 
 
 Create initial logistic regression model
@@ -169,11 +400,15 @@ plot(glm.step1, which = 4)
 ```
 
 
+
+
+
 ```{r}
 BBBC_Train_Logit$PredProb = predict.glm(glm.step1, BBBC_Train_Logit, type = "response")
 BBBC_Train_Logit$PredChoice = ifelse(BBBC_Train_Logit$PredProb >= 0.5, 1, 0)
-caret::confusionMatrix(as.factor(BBBC_Train_Logit$Choice), as.factor(BBBC_Train_Logit$PredChoice))
+caret::confusionMatrix(as.factor(BBBC_Train_Logit$Choice), as.factor(BBBC_Train_Logit$PredChoice), positive = "1")
 ```
+
 The accuracy of this model is not the best, but the positive predictive value, which is what we care about, is pretty good.
 
 
@@ -182,7 +417,7 @@ Run model with test data;
 ```{r}
 BBBC_Test_Logit$PredProb = predict.glm(glm.step1, BBBC_Test_Logit, type = "response")
 BBBC_Test_Logit$PredChoice = ifelse(BBBC_Test_Logit$PredProb >= 0.5, 1, 0)
-caret::confusionMatrix(as.factor(BBBC_Test_Logit$Choice), as.factor(BBBC_Test_Logit$PredChoice))
+caret::confusionMatrix(as.factor(BBBC_Test_Logit$Choice), as.factor(BBBC_Test_Logit$PredChoice), positive = "1")
 ```
 
 The model has better accuracy with the test data, and still has a high positive predictive value. It could get better by calibrating the sensitivity and specificity.
@@ -190,41 +425,43 @@ The model has better accuracy with the test data, and still has a high positive 
 
 Calculate and plot AUC
 ```{r}
-pred_test = predict(glm.step1, BBBC_Test_Logit, type = "response")
-response_test = BBBC_Test_Logit$Choice
-predict_test = prediction(pred_test, response_test)
-auc_test = round(as.numeric(performance(predict_test, measure = "auc")@y.values),3)
-perform = performance(predict_test, "tpr","fpr")
+pred_train = predict(glm.step1, BBBC_Train_Logit, type = "response")
+response_train = BBBC_Train_Logit$Choice
+predict_train = prediction(pred_train, response_train)
+auc_train = round(as.numeric(performance(predict_train, measure = "auc")@y.values),3)
+perform = performance(predict_train, "tpr","fpr")
 plot(perform, colorize = T, main = "ROC Curve")
-text(0.5,0.5, paste("AUC:", auc_test))
+text(0.5,0.5, paste("AUC:", auc_train))
 ```
 
 
 
 ```{r}
-plot(unlist(performance(predict_test, "sens")@x.values),
-     unlist(performance(predict_test, "sens")@y.values),
+plot(unlist(performance(predict_train, "sens")@x.values),
+     unlist(performance(predict_train, "sens")@y.values),
      type = "l",
      lwd = 2,
      ylab = "Sensitivity",
      xlab = "Cutoff",
-     main = paste("Maximized Cutoff", "AUC: ", auc_test))
+     main = paste("Maximized Cutoff", "AUC: ", auc_train))
 
 par(new = TRUE)
 
-plot(unlist(performance(predict_test, "spec")@x.values),
-     unlist(performance(predict_test, "spec")@y.values),
+plot(unlist(performance(predict_train, "spec")@x.values),
+     unlist(performance(predict_train, "spec")@y.values),
      type = "l",
      lwd = 2,
-     col = "red")
+     col = "red",
+     ylab="",
+     xlab="")
 
 axis(4, at=seq(0, 1, 0.2))
 mtext("Specificity", side = 4, col = 'red')
 
-min.diff.glm = which.min(abs(unlist(performance(predict_test, "sens")@y.values) - 
-                               unlist(performance(predict_test, "spec")@y.values)))
-min.x.glm = unlist(performance(predict_test, "sens")@x.values)[min.diff.glm]
-min.y.glm = unlist(performance(predict_test, "sens")@y.values)[min.diff.glm]
+min.diff.glm = which.min(abs(unlist(performance(predict_train, "sens")@y.values) - 
+                               unlist(performance(predict_train, "spec")@y.values)))
+min.x.glm = unlist(performance(predict_train, "sens")@x.values)[min.diff.glm]
+min.y.glm = unlist(performance(predict_train, "sens")@y.values)[min.diff.glm]
 optimal.glm = min.x.glm
 
 abline(h = min.y.glm, lty = 3)
@@ -237,9 +474,10 @@ Refit predictions and confusion matrix;
 ```{r}
 BBBC_Test_Logit$PredProb = predict.glm(glm.step1, BBBC_Test_Logit, type = "response")
 BBBC_Test_Logit$PredChoice = ifelse(BBBC_Test_Logit$PredProb >= 0.23, 1, 0)
-caret::confusionMatrix(as.factor(BBBC_Test_Logit$Choice), as.factor(BBBC_Test_Logit$PredChoice))
+caret::confusionMatrix(as.factor(BBBC_Test_Logit$Choice), as.factor(BBBC_Test_Logit$PredChoice), positive = "1")
 ```
 
+<<<<<<< HEAD
 This doesn't actually look that good. The model's accuracy has dropped, as has the specificity and positive predictive value. Based on these numbers, it would most likely be better to go with the model that has a cutoff of 0.5. 
 
 The only thing that might be worth checking out, though, is that in the confusion matrix, it looks like there's a better ratio of customers that actually want to buy versus those where the book is mailed but then returned. 
@@ -293,24 +531,14 @@ So, even though the optimized model has a lower accuracy rate, it results in gre
 
 
 The best Logit model therefore, is;
+=======
+>>>>>>> e1b7583b6354e3ff58efee075c7f787d78677d52
 
 log(1/(1-p)) = -0.289 + 1.244*P_Art - 0.088*Frequency - 0.812*Gender1 - 0.294*P_Cook - 0.282*P_DIY + 0.002*Amount_Purchased - 0.196*P_Child, with a cutoff threshold of 0.23 instead of 0.5.
 
 The most influential covariates then, are P_Art(number of art books purchased), Frequency(total number of purchases), Gender, P_Cook(number of cookbooks purchased), P_DIY (number of DIY books purchased), Amount_Purchased (total money spent), and P_Child.
 
-Breaking down how each covariate influences the model;
 
-The odds of a customer buying The Art History of Florence change by a factor of 3.46 with each additional art book purchased, assuming other variables remain constant.
-
-The odds of a customer buying The Art History of Florence change by a factor of 0.915 with each additional book purchased, assuming other variables remain constant.
-
-The odds of a male customer are .443 times that of a female customer, assuming other variables remain constant.
-
-The odds of a customer buying The Art History of Florence change by a factor of 0.745 with each additional cook book purchased, assuming other variables remain constant.
-
-The odds of a customer buying The Art History of Florence change by a factor of 1.002 with each additional dollar spent, assuming other variables remain constant.
-
-The odds of a customer buying The Art History of Florence change by a factor of 1.21 with each additional children's book purchased, assuming other variables remain constant.
 ```{r}
 exp(1.244)
 exp(-0.088)
@@ -373,9 +601,6 @@ It is obviously way more profitable to use the optimized logit model than to mai
 
 
 
-
-
-
 ### SVM Model
 
 ```{r}
@@ -384,13 +609,10 @@ BBBC_Test_SVM = BBBC_Test
 ```
 
 ```{r}
-# Convert to factors
-BBBC_Train_SVM$Choice = as.factor(BBBC_Train_SVM$Choice)
-BBBC_Train_SVM$Gender = as.factor(BBBC_Train_SVM$Gender)
-
-BBBC_Test_SVM$Choice = as.factor(BBBC_Test_SVM$Choice)
-BBBC_Test_SVM$Gender = as.factor(BBBC_Test_SVM$Gender)
+str(BBBC_Train_SVM)
 ```
+
+
 
 #### Use training split on BBBC_Train
 
@@ -402,41 +624,132 @@ book.train.split = BBBC_Train_SVM[tr_ind,]
 book.test.split = BBBC_Train_SVM[-tr_ind,]
 ```
 
+
+#### SVM with Linear Kernel
+
 ```{r}
 svm_form = Choice ~ .
 
-tuned = tune.svm(svm_form, data = book.train.split, 
+tuned.linear = tune.svm(svm_form, data = book.train.split,
+                 kernel = "linear",
+                 gamma = seq(.01, .1, by = .01), 
+                 cost = seq(.1, 1, by = .1))
+```
+
+```{r}
+mysvm.linear = svm(formula = svm_form, 
+            data = book.train.split, 
+            gamma =tuned.linear$best.parameters$gamma, 
+            cost = tuned.linear$best.parameters$cost)
+
+summary(mysvm.linear)
+
+```
+
+```{r}
+# Predict on the test split
+predict.test.linear = predict(mysvm.linear, 
+                     book.test.split, 
+                     type = "response")
+
+caret::confusionMatrix(predict.test.linear, book.test.split$Choice, positive = "1")
+
+```
+
+
+```{r}
+predict.test.linear = predict(mysvm.linear, 
+                     BBBC_Test_SVM, 
+                     type = "response")
+
+caret::confusionMatrix(predict.test.linear, BBBC_Test_SVM$Choice, positive = "1")
+
+```
+
+
+
+
+#### SVM with Radial Kernel
+
+```{r}
+svm_form = Choice ~ .
+
+tuned.radial = tune.svm(svm_form, data = book.train.split, 
                  gamma = seq(.01, .1, by = .01), 
                  cost = seq(.1, 1, by = .1))
 ```
 
 
 ```{r}
-mysvm = svm(formula = svm_form, 
+mysvm.radial = svm(formula = svm_form, 
             data = book.train.split, 
-            gamma =tuned$best.parameters$gamma, 
-            cost = tuned$best.parameters$cost)
+            gamma =tuned.radial$best.parameters$gamma, 
+            cost = tuned.radial$best.parameters$cost)
 
-summary(mysvm)
+summary(mysvm.radial)
 
 ```
 
 ```{r}
 # Predict on the test split
-svmpredict = predict(mysvm, 
+svmpredict.radial = predict(mysvm.radial, 
                      book.test.split, 
                      type = "response")
 
-caret::confusionMatrix(svmpredict, book.test.split$Choice)
+caret::confusionMatrix(svmpredict.radial, book.test.split$Choice, positive = "1")
 
 ```
 
 ```{r}
-svmpredict = predict(mysvm, 
+predict.test.radial = predict(mysvm.radial, 
                      BBBC_Test_SVM, 
                      type = "response")
 
-caret::confusionMatrix(svmpredict, BBBC_Test_SVM$Choice)
+caret::confusionMatrix(predict.test.radial, BBBC_Test_SVM$Choice, positive = "1")
 
 ```
+
+
+
+
+
+#### SVM with Polynomial Kernel
+
+```{r}
+svm_form = Choice ~ .
+
+tuned.poly = tune.svm(svm_form, data = book.train.split,
+                      kernel = "polynomial",
+                      degree = seq(2, 4, by = 1), 
+                      coef0 = c(0.01, 0.1, 0.25, 0.5, 0.75, 1, 2, 3), 
+                      cost = seq(.1, 1, by = .1))
+```
+
+
+```{r}
+mysvm.poly = tuned.poly$best.model
+
+summary(mysvm.poly)
+
+```
+
+```{r}
+# Predict on the test split
+svmpredict.poly = predict(mysvm.poly, 
+                     book.test.split, 
+                     type = "response")
+
+caret::confusionMatrix(svmpredict.poly, book.test.split$Choice, positive = "1")
+
+```
+
+```{r}
+predict.test.poly = predict(mysvm.poly, 
+                     BBBC_Test_SVM, 
+                     type = "response")
+
+caret::confusionMatrix(predict.test.poly, BBBC_Test_SVM$Choice, positive = "1")
+
+```
+
 
